@@ -1,0 +1,292 @@
+-- Serviços
+local Players = game:GetService("Players")
+local Input = game:GetService("UserInputService")
+local Run = game:GetService("RunService")
+local Core = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+local LP = Players.LocalPlayer
+
+-- Configurações
+local Settings = {
+    aim = false, key = "Mouse2", mode = "Hold", part = "Head",
+    smooth = 65, fov = 120, esp = true
+}
+
+-- Desenhos
+local Drawings = {}
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpectrumHub"
+ScreenGui.Parent = Core
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 500, 0, 350)
+Main.Position = UDim2.new(0.5, -250, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+Main.Active = true
+Main.Draggable = true
+Main.Parent = ScreenGui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 8)
+Corner.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Title.Text = "SPECTRUM HUB v1.3.0 | by FallenCrown1t"
+Title.TextColor3 = Color3.fromRGB(140, 90, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = Main
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.new(0, 30, 0, 30)
+Close.Position = UDim2.new(1, -35, 0, 5)
+Close.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+Close.Text = "X"
+Close.TextColor3 = Color3.new(1, 1, 1)
+Close.Font = Enum.Font.GothamBold
+Close.Parent = Title
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = Close
+
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    for _, d in pairs(Drawings) do if d then d:Remove() end end
+end)
+
+-- Abas
+local Tab1 = Instance.new("TextButton")
+Tab1.Size = UDim2.new(0, 240, 0, 35)
+Tab1.Position = UDim2.new(0, 10, 0, 50)
+Tab1.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+Tab1.Text = "AIMBOT"
+Tab1.TextColor3 = Color3.fromRGB(140, 90, 255)
+Tab1.Font = Enum.Font.GothamBold
+Tab1.Parent = Main
+
+local Tab1Corner = Instance.new("UICorner")
+Tab1Corner.CornerRadius = UDim.new(0, 6)
+Tab1Corner.Parent = Tab1
+
+local Tab2 = Instance.new("TextButton")
+Tab2.Size = UDim2.new(0, 240, 0, 35)
+Tab2.Position = UDim2.new(0, 250, 0, 50)
+Tab2.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+Tab2.Text = "ESP"
+Tab2.TextColor3 = Color3.fromRGB(255, 255, 255)
+Tab2.Font = Enum.Font.GothamBold
+Tab2.Parent = Main
+
+local Tab2Corner = Instance.new("UICorner")
+Tab2Corner.CornerRadius = UDim.new(0, 6)
+Tab2Corner.Parent = Tab2
+
+-- Container
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -20, 1, -100)
+Container.Position = UDim2.new(0, 10, 0, 95)
+Container.BackgroundTransparency = 1
+Container.Parent = Main
+
+-- Funções UI
+local function CreateToggle(parent, text, y, flag)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 0, 30)
+    label.Position = UDim2.new(0, 0, 0, y)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = parent
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 50, 0, 25)
+    btn.Position = UDim2.new(1, -60, 0, y + 2.5)
+    btn.BackgroundColor3 = Settings[flag] and Color3.fromRGB(140, 90, 255) or Color3.fromRGB(40, 40, 50)
+    btn.Text = ""
+    btn.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(1, 0)
+    btnCorner.Parent = btn
+    
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 21, 0, 21)
+    knob.Position = Settings[flag] and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    knob.BackgroundColor3 = Color3.new(1, 1, 1)
+    knob.Parent = btn
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = knob
+    
+    btn.MouseButton1Click:Connect(function()
+        Settings[flag] = not Settings[flag]
+        btn.BackgroundColor3 = Settings[flag] and Color3.fromRGB(140, 90, 255) or Color3.fromRGB(40, 40, 50)
+        knob.Position = Settings[flag] and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    end)
+end
+
+local function CreateDropdown(parent, text, y, flag, options)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 0, 30)
+    label.Position = UDim2.new(0, 0, 0, y)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = parent
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 120, 0, 30)
+    btn.Position = UDim2.new(1, -130, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    btn.Text = Settings[flag]
+    btn.TextColor3 = Color3.fromRGB(140, 90, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 4)
+    btnCorner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        local current = Settings[flag]
+        local idx = 0
+        for i, v in ipairs(options) do if v == current then idx = i break end end
+        idx = idx % #options + 1
+        Settings[flag] = options[idx]
+        btn.Text = Settings[flag]
+    end)
+end
+
+-- Preencher AIMBOT
+CreateToggle(Container, "Enable Aimbot", 0, "aim")
+CreateDropdown(Container, "Aimbot Key", 40, "key", {"Mouse1", "Mouse2", "E", "Q", "F"})
+CreateDropdown(Container, "Target Part", 80, "part", {"Head", "Torso", "RootPart"})
+CreateDropdown(Container, "Aimbot Mode", 120, "mode", {"Hold", "Toggle"})
+
+-- Preencher ESP (simples)
+local espY = 0
+CreateToggle(Container, "Enable ESP", 160, "esp")
+
+-- Alternar abas
+Tab1.MouseButton1Click:Connect(function()
+    Tab1.TextColor3 = Color3.fromRGB(140, 90, 255)
+    Tab2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    for _, v in pairs(Container:GetChildren()) do v.Visible = v.Position.Y.Offset < 160 end
+end)
+
+Tab2.MouseButton1Click:Connect(function()
+    Tab1.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab2.TextColor3 = Color3.fromRGB(140, 90, 255)
+    for _, v in pairs(Container:GetChildren()) do v.Visible = v.Position.Y.Offset >= 160 end
+end)
+
+-- Desenhos básicos
+Drawings.FOV = Drawing.new("Circle")
+Drawings.FOV.NumSides = 64
+Drawings.FOV.Thickness = 1
+Drawings.FOV.Color = Color3.fromRGB(140, 90, 255)
+Drawings.FOV.Transparency = 0.5
+
+Drawings.Dot = Drawing.new("Circle")
+Drawings.Dot.NumSides = 16
+Drawings.Dot.Filled = true
+Drawings.Dot.Color = Color3.new(1, 1, 1)
+Drawings.Dot.Radius = 4
+
+Drawings.Watermark = Drawing.new("Text")
+Drawings.Watermark.Size = 14
+Drawings.Watermark.Color = Color3.fromRGB(140, 90, 255)
+Drawings.Watermark.Outline = true
+Drawings.Watermark.Position = Vector2.new(10, 10)
+Drawings.Watermark.Text = "Spectrum v1.3.0 | by FallenCrown1t"
+
+-- Aimbot simples
+local aiming = false
+Run.RenderStepped:Connect(function()
+    local mousePos = Input:GetMouseLocation()
+    
+    Drawings.Watermark.Visible = true
+    
+    if Settings.aim then
+        Drawings.FOV.Visible = true
+        Drawings.FOV.Position = Vector2.new(mousePos.X, mousePos.Y)
+        Drawings.FOV.Radius = Settings.fov * 2
+        
+        Drawings.Dot.Visible = true
+        Drawings.Dot.Position = Vector2.new(mousePos.X, mousePos.Y)
+        
+        local keyPressed = false
+        if Settings.key == "Mouse1" then keyPressed = Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+        elseif Settings.key == "Mouse2" then keyPressed = Input:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+        else keyPressed = Input:IsKeyDown(Enum.KeyCode[Settings.key]) end
+        
+        if Settings.mode == "Hold" then
+            aiming = keyPressed
+        else
+            if keyPressed and not aiming then aiming = true
+            elseif keyPressed and aiming then aiming = false end
+        end
+        
+        if aiming then
+            local closest, closestDist = nil, Settings.fov * 2
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LP and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                    local part = p.Character:FindFirstChild(Settings.part == "RootPart" and "HumanoidRootPart" or Settings.part) or p.Character:FindFirstChild("Head")
+                    if part then
+                        local pos, on = Camera:WorldToViewportPoint(part.Position)
+                        if on then
+                            local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                            if dist < closestDist then
+                                closestDist = dist
+                                closest = part
+                            end
+                        end
+                    end
+                end
+            end
+            if closest then
+                Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, closest.Position), Settings.smooth / 100)
+            end
+        end
+    else
+        Drawings.FOV.Visible = false
+        Drawings.Dot.Visible = false
+    end
+    
+    if Settings.esp then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local pos, on = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                if on then
+                    -- ESP básico só com texto
+                end
+            end
+        end
+    end
+end)
+
+-- Menu Key
+Input.InputBegan:Connect(function(i)
+    if i.KeyCode == Enum.KeyCode.Insert then
+        Main.Visible = not Main.Visible
+    end
+end)
+
+print("Spectrum Hub v1.3.0 carregado! by FallenCrown1t")
